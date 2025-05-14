@@ -1,0 +1,46 @@
+
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./:/var/www/
+            - ./_docker/nginx/conf.d/:/etc/nginx/conf.d
+        ports:
+            - "8891:80"
+        depends_on:
+            - app
+        container_name: category_nginx
+
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        volumes:
+            - ./:/var/www/
+        depends_on:
+            -  db
+        container_name: category_tree
+
+    db:
+        image: mysql:8.0
+        volumes:
+            - ./tmp/db:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: category_tree
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "33070:3306"
+        command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+        container_name: category_tree_db
+
+    adminer_tekme_backend:
+        image: michalhosna/adminer
+        ports:
+            - "8093:8080"
+        environment:
+            ADMINER_DB: "${DB_DATABASE:-app}"
+            ADMINER_PASSWORD: "${DB_PASSWORD:-secret}"
+            ADMINER_SERVER: "${DB_HOST:-mysql}"
+            ADMINER_USERNAME: "${DB_USERNAME:-app}"
+            ADMINER_AUTOLOGIN: 1
+        container_name: adminer_category_tree
